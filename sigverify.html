@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SigVerify AI</title>
+<style>
+  :root{--p:#5837C0;--p2:#7C5CED;--g:#22c55e;--r:#ef4444;--bg:#f8f7ff;--card:#fff;--border:#e5e7eb;--txt:#1a1a2e;--sub:#6b7280}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
+  header{background:#fff;border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:99;box-shadow:0 1px 8px #5837c012}
+  .logo{width:42px;height:42px;background:linear-gradient(135deg,var(--p),var(--p2));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+  header h1{font-size:1.2rem;font-weight:800;letter-spacing:-.5px}
+  header p{font-size:.72rem;color:var(--sub);font-weight:500}
+  .badge{margin-left:auto;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:20px;padding:4px 12px;font-size:.72rem;font-weight:700;display:flex;align-items:center;gap:5px}
+  .dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  main{max-width:900px;margin:0 auto;padding:36px 20px 60px}
+  .hero{text-align:center;margin-bottom:36px}
+  .hero h2{font-size:2.4rem;font-weight:900;letter-spacing:-1px;line-height:1.1;margin-bottom:12px}
+  .hero h2 span{background:linear-gradient(90deg,var(--p),var(--p2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .hero p{color:var(--sub);font-size:1rem;max-width:500px;margin:0 auto;line-height:1.6}
+  /* API URL config */
+  .config-box{background:#fff;border:1.5px dashed var(--p2);border-radius:16px;padding:14px 18px;margin-bottom:28px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .config-box label{font-size:.8rem;font-weight:700;color:var(--p);white-space:nowrap}
+  .config-box input{flex:1;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:.85rem;outline:none;min-width:200px;transition:border .2s}
+  .config-box input:focus{border-color:var(--p)}
+  /* Tabs */
+  .tabs{display:flex;gap:8px;margin-bottom:24px;background:#f3f4f6;border-radius:12px;padding:4px}
+  .tab{flex:1;padding:10px;text-align:center;border-radius:9px;cursor:pointer;font-weight:700;font-size:.85rem;border:none;background:transparent;color:var(--sub);transition:all .25s}
+  .tab.active{background:#fff;color:var(--p);box-shadow:0 2px 8px #5837c020}
+  .panel{display:none}
+  .panel.active{display:block}
+  /* Upload panel */
+  .dropzone{border:2px dashed var(--border);border-radius:20px;padding:48px 24px;text-align:center;cursor:pointer;transition:all .3s;background:#fff;position:relative;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .dropzone:hover,.dropzone.drag{border-color:var(--p);background:#f8f5ff}
+  .dropzone .icon{font-size:3rem;margin-bottom:12px}
+  .dropzone p{font-weight:700;font-size:1rem;margin-bottom:4px}
+  .dropzone small{color:var(--sub);font-size:.8rem}
+  .dropzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  #preview-wrap{margin-top:16px;display:none}
+  #preview-wrap img{max-height:200px;border-radius:12px;border:1px solid var(--border);box-shadow:0 2px 10px #0001;background:#fff;padding:8px;object-fit:contain}
+  #preview-name{font-size:.78rem;color:var(--sub);margin-top:6px;font-weight:600}
+  /* Canvas panel */
+  .canvas-wrap{background:#fff;border-radius:20px;border:1px solid var(--border);padding:16px;text-align:center}
+  canvas{border:1.5px solid var(--border);border-radius:12px;cursor:crosshair;background:#fff;touch-action:none;width:100%;max-width:540px;height:200px;display:block;margin:0 auto}
+  .canvas-tools{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+  .tool-btn{padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:#fff;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s;color:var(--txt)}
+  .tool-btn:hover{border-color:var(--p);color:var(--p)}
+  .tool-btn.danger{border-color:#fee2e2;color:var(--r);background:#fff5f5}
+  .tool-btn.danger:hover{background:#fee2e2}
+  /* Button */
+  .btn{width:100%;padding:15px;border-radius:14px;border:none;font-size:1rem;font-weight:800;cursor:pointer;margin-top:18px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn-primary{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;box-shadow:0 4px 20px #5837c040}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 24px #5837c060}
+  .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  /* Result */
+  #result{margin-top:24px;display:none}
+  .result-card{background:#fff;border-radius:20px;padding:28px;border:2px solid var(--border);box-shadow:0 4px 24px #5837c015;animation:slideUp .4s ease}
+  @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .result-header{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+  .result-icon{font-size:2.8rem}
+  .result-title{font-size:1.6rem;font-weight:900;text-transform:uppercase;letter-spacing:1px}
+  .result-sub{font-size:.8rem;color:var(--sub);font-weight:600}
+  .genuine .result-title{color:var(--g)}
+  .forged .result-title{color:var(--r)}
+  .inconclusive .result-title{color:#f59e0b}
+  .result-card.genuine{border-color:#bbf7d0;background:linear-gradient(135deg,#f0fdf4,#fff)}
+  .result-card.forged{border-color:#fecaca;background:linear-gradient(135deg,#fff5f5,#fff)}
+  .result-card.inconclusive{border-color:#fde68a;background:linear-gradient(135deg,#fffbeb,#fff)}
+  /* Confidence bar */
+  .conf-label{font-size:.75rem;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+  .conf-bar{background:#f3f4f6;border-radius:99px;height:10px;overflow:hidden;margin-bottom:4px}
+  .conf-fill{height:100%;border-radius:99px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+  .genuine .conf-fill{background:linear-gradient(90deg,#4ade80,#22c55e)}
+  .forged .conf-fill{background:linear-gradient(90deg,#f87171,#ef4444)}
+  .inconclusive .conf-fill{background:linear-gradient(90deg,#fbbf24,#f59e0b)}
+  .conf-val{font-size:1.4rem;font-weight:900;font-family:monospace}
+  .genuine .conf-val{color:var(--g)}
+  .forged .conf-val{color:var(--r)}
+  .inconclusive .conf-val{color:#f59e0b}
+  /* Reasoning */
+  .reasoning{margin-top:18px;background:#f9f8ff;border-radius:12px;padding:14px;border:1px solid #ede9fe;font-size:.85rem;line-height:1.6;color:#374151;font-style:italic}
+  .reasoning strong{font-style:normal;color:var(--p);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px}
+  /* Error */
+  .err{background:#fff5f5;border:1px solid #fecaca;border-radius:12px;padding:14px;color:var(--r);font-size:.85rem;font-weight:600;margin-top:16px;display:none}
+  /* Spinner */
+  .spinner{width:20px;height:20px;border:3px solid #ffffff50;border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* Info cards */
+  .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:40px}
+  .info-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px;transition:box-shadow .2s}
+  .info-card:hover{box-shadow:0 4px 16px #5837c015}
+  .info-card .ic{font-size:1.5rem;margin-bottom:8px}
+  .info-card h4{font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+  .info-card p{font-size:.75rem;color:var(--sub);line-height:1.5}
+  footer{text-align:center;padding:24px;color:var(--sub);font-size:.75rem;border-top:1px solid var(--border);background:#fff;margin-top:20px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🛡️</div>
+  <div>
+    <h1>SigVerify AI</h1>
+    <p>Neural Signature Analysis Engine</p>
+  </div>
+  <div class="badge"><div class="dot"></div>System Online</div>
+</header>
+
+<main>
+  <div class="hero">
+    <h2>Authenticate with <span>Precision.</span></h2>
+    <p>Upload a signature image or draw one on screen for instant AI-driven forensic analysis — detecting genuine signatures from forgeries.</p>
+  </div>
+
+  <!-- API Config -->
+  <div class="config-box">
+    <label>🔗 API URL:</label>
+    <input type="text" id="api-url" placeholder="https://your-app.onrender.com" />
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('upload',this)">📁 Upload Image</button>
+    <button class="tab" onclick="switchTab('draw',this)">✍️ Draw Signature</button>
+  </div>
+
+  <!-- Upload Panel -->
+  <div class="panel active" id="panel-upload">
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="file-input" accept="image/*" onchange="handleFile(this.files[0])"/>
+      <div class="icon">📂</div>
+      <p>Drop signature image here</p>
+      <small>PNG, JPG, BMP — up to 10 MB</small>
+    </div>
+    <div id="preview-wrap">
+      <img id="preview-img" src="" alt="Preview"/>
+      <div id="preview-name"></div>
+    </div>
+    <button class="btn btn-primary" id="verify-btn-upload" onclick="verifyUpload()" disabled>
+      <span id="spinner-upload" class="spinner"></span>
+      🔍 Verify Signature
+    </button>
+  </div>
+
+  <!-- Draw Panel -->
+  <div class="panel" id="panel-draw">
+    <div class="canvas-wrap">
+      <canvas id="sig-canvas" width="540" height="200"></canvas>
+      <div class="canvas-tools">
+        <button class="tool-btn" onclick="setSize(2)">Thin</button>
+        <button class="tool-btn" onclick="setSize(4)">Medium</button>
+        <button class="tool-btn" onclick="setSize(7)">Thick</button>
+        <button class="tool-btn danger" onclick="clearCanvas()">🗑️ Clear</button>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="verify-btn-draw" onclick="verifyDraw()">
+      <span id="spinner-draw" class="spinner"></span>
+      🔍 Verify Signature
+    </button>
+  </div>
+
+  <!-- Error -->
+  <div class="err" id="err-box"></div>
+
+  <!-- Result -->
+  <div id="result">
+    <div class="result-card" id="result-card">
+      <div class="result-header">
+        <div class="result-icon" id="res-icon"></div>
+        <div>
+          <div class="result-title" id="res-title"></div>
+          <div class="result-sub">Forensic Signature Analysis</div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div class="conf-label">Confidence</div>
+          <div class="conf-val" id="res-conf"></div>
+        </div>
+      </div>
+      <div class="conf-label">Confidence Score</div>
+      <div class="conf-bar"><div class="conf-fill" id="res-bar" style="width:0%"></div></div>
+      <div class="reasoning"><strong>Forensic Analysis</strong><span id="res-reason"></span></div>
+    </div>
+  </div>
+
+  <!-- Info Cards -->
+  <div class="info-grid">
+    <div class="info-card"><div class="ic">🧠</div><h4>ML + CNN</h4><p>Deep convolutional network trained on thousands of genuine and forged signature pairs.</p></div>
+    <div class="info-card"><div class="ic">🔗</div><h4>Siamese Network</h4><p>Compares signature embeddings at a feature level to detect subtle differences.</p></div>
+    <div class="info-card"><div class="ic">⚡</div><h4>Real-time</h4><p>Instant analysis results from cloud-hosted model inference API.</p></div>
+  </div>
+</main>
+
+<footer>© 2026 SigVerify AI Systems · Powered by ML + CNN + Siamese Networks</footer>
+
+<script>
+// ── Canvas drawing ──────────────────────────────────────
+const canvas = document.getElementById('sig-canvas');
+const ctx = canvas.getContext('2d');
+let drawing = false, brushSize = 3;
+
+ctx.strokeStyle = '#1a1a2e';
+ctx.lineJoin = 'round';
+ctx.lineCap = 'round';
+ctx.lineWidth = brushSize;
+
+function pos(e) {
+  const r = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / r.width;
+  const scaleY = canvas.height / r.height;
+  if (e.touches) {
+    return {x:(e.touches[0].clientX-r.left)*scaleX, y:(e.touches[0].clientY-r.top)*scaleY};
+  }
+  return {x:(e.clientX-r.left)*scaleX, y:(e.clientY-r.top)*scaleY};
+}
+canvas.addEventListener('mousedown', e=>{drawing=true; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y)});
+canvas.addEventListener('mousemove', e=>{if(!drawing)return; const p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke()});
+canvas.addEventListener('mouseup', ()=>drawing=false);
+canvas.addEventListener('mouseleave', ()=>drawing=false);
+canvas.addEventListener('touchstart', e=>{e.preventDefault(); drawing=true; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y)}, {passive:false});
+canvas.addEventListener('touchmove', e=>{e.preventDefault(); if(!drawing)return; const p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke()}, {passive:false});
+canvas.addEventListener('touchend', ()=>drawing=false);
+
+function setSize(s){brushSize=s; ctx.lineWidth=s}
+function clearCanvas(){ctx.clearRect(0,0,canvas.width,canvas.height)}
+
+// ── Tab switching ───────────────────────────────────────
+function switchTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+id).classList.add('active');
+  hideResult();
+}
+
+// ── File upload ─────────────────────────────────────────
+let selectedFile = null;
+function handleFile(file) {
+  if(!file) return;
+  selectedFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('preview-img').src = e.target.result;
+    document.getElementById('preview-name').textContent = file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)';
+    document.getElementById('preview-wrap').style.display = 'block';
+    document.getElementById('verify-btn-upload').disabled = false;
+  };
+  reader.readAsDataURL(file);
+  hideResult();
+}
+
+// Drag and drop
+const dz = document.getElementById('dropzone');
+dz.addEventListener('dragover', e=>{e.preventDefault(); dz.classList.add('drag')});
+dz.addEventListener('dragleave', ()=>dz.classList.remove('drag'));
+dz.addEventListener('drop', e=>{e.preventDefault(); dz.classList.remove('drag'); handleFile(e.dataTransfer.files[0])});
+
+// ── API call ────────────────────────────────────────────
+function getApiUrl() {
+  const url = document.getElementById('api-url').value.trim().replace(/\/+$/,'');
+  return url ? url + '/predict' : null;
+}
+
+function setLoading(id, on) {
+  document.getElementById('spinner-'+id).style.display = on ? 'inline-block' : 'none';
+  document.getElementById('verify-btn-'+id).disabled = on;
+}
+
+async function callApi(formData, spinnerId) {
+  const url = getApiUrl();
+  if(!url) { showErr('Please enter your API URL above.'); return; }
+  hideResult(); showErr('');
+  setLoading(spinnerId, true);
+  try {
+    const res = await fetch(url, {method:'POST', body:formData});
+    if(!res.ok) throw new Error('Server responded with status ' + res.status);
+    const data = await res.json();
+    showResult(data);
+  } catch(e) {
+    showErr('❌ ' + (e.message || 'Network error. Check your API URL and CORS settings.'));
+  } finally {
+    setLoading(spinnerId, false);
+  }
+}
+
+async function verifyUpload() {
+  if(!selectedFile) return;
+  const fd = new FormData();
+  fd.append('file', selectedFile);
+  await callApi(fd, 'upload');
+}
+
+async function verifyDraw() {
+  canvas.toBlob(async blob => {
+    const fd = new FormData();
+    fd.append('file', blob, 'signature.png');
+    await callApi(fd, 'draw');
+  }, 'image/png');
+}
+
+// ── Display ─────────────────────────────────────────────
+function showResult(data) {
+  const pred = (data.prediction || 'inconclusive').toLowerCase();
+  const conf = typeof data.confidence === 'number' ? data.confidence : 0.5;
+  const reason = data.reasoning || data.message || (pred === 'genuine' ? 'Signature characteristics match genuine patterns.' : pred === 'forged' ? 'Anomalies detected suggesting this may be a forgery.' : 'Analysis inconclusive. Try a clearer image.');
+
+  const icons = {genuine:'✅', forged:'❌', inconclusive:'⚠️'};
+  document.getElementById('res-icon').textContent = icons[pred] || '🔍';
+  document.getElementById('res-title').textContent = pred;
+  document.getElementById('res-conf').textContent = (conf*100).toFixed(1) + '%';
+  document.getElementById('res-reason').textContent = reason;
+
+  const card = document.getElementById('result-card');
+  card.className = 'result-card ' + pred;
+
+  document.getElementById('result').style.display = 'block';
+  setTimeout(()=>{ document.getElementById('res-bar').style.width = (conf*100)+'%'; }, 100);
+
+  document.getElementById('result').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function hideResult() {
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('res-bar').style.width = '0%';
+}
+
+function showErr(msg) {
+  const el = document.getElementById('err-box');
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
+</script>
+</body>
+</html>
